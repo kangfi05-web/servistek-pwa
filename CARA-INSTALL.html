@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cara Install ServisTek</title>
+<style>
+  body { font-family: system-ui, sans-serif; background: #0A0D13; color: #EDF0F5; max-width: 700px; margin: 0 auto; padding: 24px 16px; line-height: 1.7; }
+  h1 { color: #FF8A3D; font-size: 22px; margin-bottom: 4px; }
+  h2 { color: #FFB066; font-size: 15px; margin: 24px 0 10px; border-left: 3px solid #FF8A3D; padding-left: 10px; }
+  .badge { display: inline-block; background: #3D2316; color: #FFD9B8; border: 1px solid #FF8A3D; border-radius: 6px; padding: 3px 10px; font-size: 12px; font-family: monospace; margin-bottom: 16px; }
+  .step { background: #12151F; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 14px 16px; margin-bottom: 10px; }
+  .step strong { color: #FF8A3D; }
+  .note { background: #0F3D2C; border: 1px solid rgba(52,211,153,0.3); border-radius: 8px; padding: 12px 14px; font-size: 13px; color: #9CF0BE; margin: 16px 0; }
+  .warn { background: #473410; border: 1px solid rgba(251,191,36,0.3); border-radius: 8px; padding: 12px 14px; font-size: 13px; color: #FFE2A0; margin: 16px 0; }
+  code { background: #1C2230; padding: 2px 7px; border-radius: 4px; font-family: monospace; font-size: 13px; color: #5EEAD4; }
+  hr { border: none; border-top: 1px solid rgba(255,255,255,0.08); margin: 24px 0; }
+</style>
+</head>
+<body>
+
+<h1>📲 Cara Install ServisTek sebagai Aplikasi</h1>
+<div class="badge">PWA — Progressive Web App</div>
+
+<div class="note">
+  ServisTek menggunakan teknologi <strong>PWA</strong> — bisa diinstall seperti APK di HP Android, dan seperti aplikasi di PC/laptop. Tidak perlu Play Store atau App Store!
+</div>
+
+<hr>
+
+<h2>📱 Install di HP Android (Chrome)</h2>
+
+<div class="step"><strong>1.</strong> Buka file <code>index.html</code> di browser Chrome (atau hosting di server lokal)</div>
+<div class="step"><strong>2.</strong> Akan muncul tombol <strong>"📲 Install App"</strong> di pojok kanan atas — klik tombol itu</div>
+<div class="step"><strong>3.</strong> Atau: klik menu <strong>⋮ (titik tiga)</strong> di Chrome → pilih <strong>"Tambahkan ke layar utama"</strong> atau <strong>"Install aplikasi"</strong></div>
+<div class="step"><strong>4.</strong> Konfirmasi → ServisTek akan muncul di homescreen seperti APK asli ✅</div>
+
+<hr>
+
+<h2>💻 Install di PC / Laptop (Chrome atau Edge)</h2>
+
+<div class="step"><strong>1.</strong> Buka <code>index.html</code> di browser Chrome atau Microsoft Edge</div>
+<div class="step"><strong>2.</strong> Di pojok kanan address bar akan muncul ikon <strong>➕ install</strong> — klik</div>
+<div class="step"><strong>3.</strong> Atau: menu Chrome → <strong>"Cast, Save, and Share"</strong> → <strong>"Install ServisTek"</strong></div>
+<div class="step"><strong>4.</strong> Aplikasi akan terbuka di jendela tersendiri seperti software biasa ✅</div>
+
+<hr>
+
+<h2>🔄 Cara Kerja Auto-Update</h2>
+
+<div class="step"><strong>Otomatis:</strong> ServisTek mengecek update setiap <strong>30 menit</strong> saat aplikasi terbuka</div>
+<div class="step"><strong>Banner:</strong> Jika ada versi baru, muncul banner hijau di bagian bawah: <em>"Update ServisTek tersedia!"</em></div>
+<div class="step"><strong>Update:</strong> Klik <strong>"Update Sekarang"</strong> → halaman refresh otomatis dengan versi terbaru</div>
+<div class="step"><strong>Data aman:</strong> Semua data riwayat servis, stok, dan pelanggan tersimpan di <strong>localStorage</strong> — tidak hilang saat update</div>
+
+<div class="note">
+  💡 Untuk update manual: refresh halaman dengan <code>Ctrl+Shift+R</code> (hard refresh) di PC, atau close dan buka kembali di HP.
+</div>
+
+<hr>
+
+<h2>🌐 Cara Buka di HP Lain / Share ke Teman</h2>
+
+<div class="step"><strong>Opsi 1 — File lokal:</strong> Copy folder <code>servistek-pwa</code> ke HP/PC lain, buka <code>index.html</code> dengan Chrome</div>
+<div class="step"><strong>Opsi 2 — Server lokal:</strong> Jalankan di server lokal (XAMPP, Nginx, dll) lalu akses via IP jaringan WiFi yang sama</div>
+<div class="step"><strong>Opsi 3 — Hosting:</strong> Upload ke hosting (Netlify, GitHub Pages, dll) — gratis — lalu bagikan link-nya</div>
+
+<div class="warn">
+  ⚠️ Service Worker (auto-update) HANYA berjalan jika dibuka melalui server (http:// atau https://), bukan langsung dari file (<code>file://</code>). Untuk file lokal tanpa server, fitur update tidak aktif tapi aplikasi tetap bisa dipakai normal.
+</div>
+
+<hr>
+
+<h2>📦 Isi Folder ServisTek PWA</h2>
+<div class="step">
+  <code>index.html</code> — Aplikasi utama ServisTek v11<br>
+  <code>manifest.json</code> — Konfigurasi PWA (nama, ikon, tema)<br>
+  <code>sw.js</code> — Service Worker (offline + auto-update)<br>
+  <code>icons/</code> — Ikon aplikasi berbagai ukuran (72px — 512px)<br>
+  <code>CARA-INSTALL.html</code> — Panduan ini
+</div>
+
+</body>
+</html>
