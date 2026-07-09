@@ -14,7 +14,7 @@
 <link rel="apple-touch-icon" href="icons/icon-192x192.png">
 <link rel="apple-touch-icon" sizes="152x152" href="icons/icon-152x152.png">
 <link rel="apple-touch-icon" sizes="144x144" href="icons/icon-144x144.png">
-<title>ServisTek v11.12 — Alat Bantu Servis HP</title>
+<title>ServisTek v11.13 — Alat Bantu Servis HP</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" defer></script>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1262,7 +1262,7 @@
       <div class="brand-text">
         <h1>ServisTek</h1>
         <p>Alat Bantu Servis HP</p>
-        <p style="font-family:var(--mono);font-size:10px;color:var(--ember-2);letter-spacing:0.5px;margin-top:1px;">v11.12.0</p>
+        <p style="font-family:var(--mono);font-size:10px;color:var(--ember-2);letter-spacing:0.5px;margin-top:1px;">v11.13.0</p>
       </div>
     </div>
     <div style="display:flex;align-items:center;gap:10px;">
@@ -1271,7 +1271,7 @@
       <button id="pwa-install-btn" onclick="pwaTriggerInstall()" title="Install ServisTek">📲 Install App</button>
   <div class="status-strip">
         <span><span class="status-dot"></span>AKTIF</span>
-        <span style="font-family:var(--mono);font-size:10px;color:var(--ember-2);background:var(--ember-dim);border:1px solid rgba(255,138,61,0.3);padding:2px 7px;border-radius:4px;">v11.12.0</span>
+        <span style="font-family:var(--mono);font-size:10px;color:var(--ember-2);background:var(--ember-dim);border:1px solid rgba(255,138,61,0.3);padding:2px 7px;border-radius:4px;">v11.13.0</span>
         <span id="clock">--:--:--</span>
       </div>
     </div>
@@ -1462,8 +1462,21 @@
         <div id="dashAlertItems" style="display:flex;flex-direction:column;gap:6px;"></div>
       </div>
 
-      <!-- Servis masuk hari ini (collapsible) -->
-      <div id="dashTodayList" style="margin-top:12px;display:none;">
+      <!-- Target Omzet Progress (tampil hanya jika target sudah diset) -->
+      <div id="dashTargetWrap" style="display:none;margin-top:14px;padding-top:14px;border-top:1px solid var(--line);">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;flex-wrap:wrap;gap:6px;">
+          <span style="font-family:var(--mono);font-size:11px;color:var(--text-dim);">🎯 Progress Target Omzet Bulan Ini</span>
+          <span id="dashTargetPct" style="font-family:var(--mono);font-size:12px;font-weight:700;color:var(--ok);">0%</span>
+        </div>
+        <div style="background:var(--line);border-radius:6px;height:10px;overflow:hidden;margin-bottom:6px;">
+          <div id="dashTargetBar" style="height:100%;border-radius:6px;background:linear-gradient(90deg,var(--ok),#16A34A);width:0%;transition:width 0.6s ease;"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;">
+          <span id="dashTargetCurrent" style="font-family:var(--mono);font-size:11px;color:var(--ok);">Rp 0</span>
+          <span id="dashTargetGoal" style="font-family:var(--mono);font-size:11px;color:var(--text-faint);"></span>
+        </div>
+      </div>
+    </div>
         <div style="font-family:var(--mono);font-size:10.5px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">📋 Masuk Hari Ini</div>
         <div id="dashTodayItems"></div>
       </div>
@@ -1653,12 +1666,13 @@
       <div class="history-filters">
         <input type="text" id="histSearch" placeholder="Cari nama, HP, tiket...">
         <select id="histStatusFilter">
-          <option value="">Semua status</option>
+          <option value="">Semua status (aktif)</option>
           <option value="masuk">Baru masuk</option>
           <option value="proses">Dikerjakan</option>
           <option value="selesai">Selesai</option>
           <option value="belum-lunas">Belum Lunas</option>
           <option value="hutang">Hutang</option>
+          <option value="arsip">🗄 Arsip</option>
         </select>
       </div>
       <div id="historyList"></div>
@@ -3216,17 +3230,21 @@ function renderHistory(resetPage = true){
   const statusFilter = document.getElementById("histStatusFilter").value;
 
   const filtered = allHistory.filter(h=>{
-    const matchStatus = statusFilter ? h.status===statusFilter : true;
+    // Default (kosong) = semua status AKTIF, KECUALI arsip
+    const matchStatus = statusFilter
+      ? h.status === statusFilter
+      : h.status !== "arsip";
     const matchQ = !q || [h.name,h.phone,h.ticket,h.device,h.complaint].some(v=>v&&v.toLowerCase().includes(q));
     return matchStatus && matchQ;
   });
 
-  // Update stat counters (selalu dari allHistory, bukan filtered)
-  document.getElementById("statTotal").textContent = allHistory.length;
-  document.getElementById("statMasuk").textContent = allHistory.filter(h=>h.status==="masuk").length;
-  document.getElementById("statHutang").textContent = allHistory.filter(h=>h.status==="hutang"||h.status==="belum-lunas"||(h.status==="selesai"&&Math.max(0,(h.total||0)-(h.dp||0))>0)).length;
-  document.getElementById("statProses").textContent = allHistory.filter(h=>h.status==="proses").length;
-  const omzet = allHistory.filter(h=>h.status==="selesai").reduce((s,h)=>s+h.total,0);
+  // Update stat counters (selalu dari allHistory, KECUALI arsip)
+  const activeHistory = allHistory.filter(h=>h.status!=="arsip");
+  document.getElementById("statTotal").textContent = activeHistory.length;
+  document.getElementById("statMasuk").textContent = activeHistory.filter(h=>h.status==="masuk").length;
+  document.getElementById("statHutang").textContent = activeHistory.filter(h=>h.status==="hutang"||h.status==="belum-lunas"||(h.status==="selesai"&&Math.max(0,(h.total||0)-(h.dp||0))>0)).length;
+  document.getElementById("statProses").textContent = activeHistory.filter(h=>h.status==="proses").length;
+  const omzet = activeHistory.filter(h=>h.status==="selesai").reduce((s,h)=>s+h.total,0);
   document.getElementById("statOmzet").textContent = rupiah(omzet);
 
   const container = document.getElementById("historyList");
@@ -3269,6 +3287,7 @@ function renderHistory(resetPage = true){
           <option value="selesai" ${entry.status==='selesai'?'selected':''}>Selesai</option>
           <option value="belum-lunas" ${entry.status==='belum-lunas'?'selected':''}>Belum Lunas</option>
           <option value="hutang" ${entry.status==='hutang'?'selected':''}>Hutang</option>
+          <option value="arsip" ${entry.status==='arsip'?'selected':''}>🗄 Arsip</option>
         </select>
       </div>
       <div class="hc-meta">
@@ -3277,6 +3296,16 @@ function renderHistory(resetPage = true){
         ${entry.teknisi?"<br>👨‍🔧 Teknisi: <strong>"+escapeHtml(entry.teknisi)+"</strong>":""}
       </div>
       ${entry.foto && entry.foto.length?`<div style="display:flex;gap:5px;margin:6px 0;flex-wrap:wrap;">${entry.foto.map((d,fi)=>'<img src="'+d+'" style="width:48px;height:48px;object-fit:cover;border-radius:5px;border:1px solid rgba(255,255,255,0.1);cursor:pointer;" onclick="openFotoLightbox(this.src,'+JSON.stringify(entry.foto)+')">').join("")}</div>`:""}
+      ${entry.statusLog && entry.statusLog.length ? `
+        <div style="margin:6px 0 2px;border-top:1px solid var(--line);padding-top:6px;">
+          <div style="font-family:var(--mono);font-size:9.5px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">📋 Riwayat Status</div>
+          ${entry.statusLog.map(l=>{
+            const d = new Date(l.waktu);
+            const ds = d.toLocaleDateString("id-ID",{day:"numeric",month:"short",year:"numeric"})+" "+d.toLocaleTimeString("id-ID",{hour:"2-digit",minute:"2-digit"});
+            const statusLabel = {masuk:"Baru Masuk",proses:"Dikerjakan",selesai:"Selesai",hutang:"Hutang","belum-lunas":"Belum Lunas"};
+            return `<div style="font-size:11.5px;color:var(--text-dim);padding:2px 0;">${ds} — <span style="color:var(--text-faint);">${statusLabel[l.dari]||l.dari}</span> → <span style="color:var(--ember-1);font-weight:600;">${statusLabel[l.ke]||l.ke}</span>${l.via?" <span style='color:var(--text-faint);font-size:10px;'>(via "+l.via+")</span>":""}</div>`;
+          }).join("")}
+        </div>` : ""}
       <div class="hc-foot">
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
           <span class="hc-price">${rupiah(entry.total)}</span>
@@ -3298,6 +3327,10 @@ function renderHistory(resetPage = true){
           <button class="hc-stiker" data-id="${entry.id}" style="background:var(--circuit-dim);color:#5EEAD4;border:1px solid rgba(94,234,212,0.4);border-radius:var(--r-sm);padding:7px 12px;font-family:var(--mono);font-size:11px;font-weight:600;cursor:pointer;transition:.15s;">🏷️ Stiker</button>
           ${(entry.status==='hutang'||entry.status==='belum-lunas')?'<button class="hc-tagih" data-id="'+entry.id+'" style="background:#451010;color:#FCA5A5;border:1px solid rgba(239,68,68,0.5);border-radius:var(--r-sm);padding:7px 12px;font-family:var(--mono);font-size:11px;font-weight:700;cursor:pointer;transition:.15s;">💸 Tagih WA</button>':''}
           <button class="hc-edit" data-id="${entry.id}">✏️ Edit</button>
+          ${entry.status!=='arsip'
+            ? `<button class="hc-arsip" data-id="${entry.id}" title="Arsipkan — data aman, bisa dipulihkan kapan saja" style="background:none;border:none;color:var(--text-faint);cursor:pointer;font-size:11px;font-family:var(--mono);text-decoration:underline;transition:color .15s;">🗄 Arsip</button>`
+            : `<button class="hc-restore" data-id="${entry.id}" title="Pulihkan dari arsip ke status masuk" style="background:var(--ok-dim);border:1px solid rgba(52,211,153,0.3);color:#9CF0BE;border-radius:var(--r-sm);padding:7px 12px;cursor:pointer;font-size:11px;font-family:var(--mono);font-weight:600;transition:.15s;">↩ Pulihkan</button>`
+          }
           <button class="hc-del" data-id="${entry.id}">Hapus</button>
         </div>
       </div>
@@ -3337,11 +3370,39 @@ function _historyClickHandler(e){
   const id = +btn.dataset.id;
 
   if(btn.classList.contains("hc-del")){
-    if(!confirm("Hapus riwayat ini? Tindakan ini tidak dapat dibatalkan.")) return;
+    if(!confirm("Hapus riwayat ini? Tindakan ini tidak dapat dibatalkan.\n\nTip: gunakan tombol 🗄 Arsip jika ingin menyimpan data tapi sembunyikan dari daftar utama.")) return;
     const hist = loadHistory().filter(h=>h.id!==id);
     saveHistory(hist);
     if(editingId === id){ editingId=null; clearEditBanner(); }
     renderHistory();
+    return;
+  }
+  if(btn.classList.contains("hc-arsip")){
+    const hist = loadHistory();
+    const item = hist.find(h=>h.id===id);
+    if(item){
+      const statusSebelumnya = item.status;
+      item.status = "arsip";
+      item._statusSebelumArsip = statusSebelumnya; // simpan untuk restore
+      if(!Array.isArray(item.statusLog)) item.statusLog = [];
+      item.statusLog.push({ dari: statusSebelumnya, ke:"arsip", waktu: new Date().toISOString() });
+      saveHistory(hist);
+      renderHistory();
+    }
+    return;
+  }
+  if(btn.classList.contains("hc-restore")){
+    const hist = loadHistory();
+    const item = hist.find(h=>h.id===id);
+    if(item){
+      const statusKembali = item._statusSebelumArsip || "masuk";
+      item.status = statusKembali;
+      delete item._statusSebelumArsip;
+      if(!Array.isArray(item.statusLog)) item.statusLog = [];
+      item.statusLog.push({ dari:"arsip", ke: statusKembali, waktu: new Date().toISOString() });
+      saveHistory(hist);
+      renderHistory();
+    }
     return;
   }
   if(btn.classList.contains("hc-edit")){
@@ -3379,10 +3440,22 @@ function _historyChangeHandler(e){
   const hist = loadHistory();
   const item = hist.find(h=>h.id===id);
   if(item){
-    item.status = sel.value;
-    if(sel.value==='selesai'||sel.value==='belum-lunas'){
+    const statusLama = item.status;
+    const statusBaru = sel.value;
+    item.status = statusBaru;
+    if(statusBaru==='selesai'||statusBaru==='belum-lunas'){
       if(!item.paidDate) item.paidDate = new Date().toISOString();
     } else { delete item.paidDate; }
+
+    // Catat log perubahan status
+    if(statusLama !== statusBaru){
+      if(!Array.isArray(item.statusLog)) item.statusLog = [];
+      item.statusLog.push({
+        dari: statusLama,
+        ke:   statusBaru,
+        waktu: new Date().toISOString(),
+      });
+    }
     saveHistory(hist);
   }
   sel.setAttribute("data-s", sel.value);
@@ -3688,7 +3761,7 @@ document.getElementById("backupJsonBtn").addEventListener("click",()=>{
   const history = loadHistory();
   const payload = {
     app: "ServisTek",
-    version: "11.12.0",
+    version: "11.13.0",
     exportedAt: new Date().toISOString(),
     ticketCounter: +localStorage.getItem("servistek_ticket_counter") || 0,
     history,
@@ -5544,7 +5617,7 @@ document.getElementById("paketSimpanBtn").addEventListener("click",()=>{
 
 /* =================== DASHBOARD HARIAN =================== */
 function renderDashboard(){
-  const hist = loadHistory();
+  const hist = loadHistory().filter(h=>h.status!=="arsip"); // arsip tidak masuk KPI dashboard
   const now  = new Date();
   const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
   const todayEnd   = todayStart + 86400000;
@@ -5628,6 +5701,31 @@ function renderDashboard(){
       });
     } else {
       alertList.style.display = "none";
+    }
+  }
+
+  // ── Target omzet bulan ini ──
+  const target = loadTarget();
+  const omzetBulanIni = hist
+    .filter(h=>h.status==="selesai" && new Date(h.date).getFullYear()===now.getFullYear() && new Date(h.date).getMonth()===now.getMonth())
+    .reduce((s,h)=>s+(h.total||0),0);
+  const targetWrap = document.getElementById("dashTargetWrap");
+  if(targetWrap){
+    if(target > 0){
+      const pct = Math.min(100, Math.round(omzetBulanIni/target*100));
+      targetWrap.style.display = "";
+      document.getElementById("dashTargetPct").textContent = pct+"%";
+      document.getElementById("dashTargetPct").style.color = pct>=100?"var(--ok)":pct>=60?"var(--warn)":"var(--text-dim)";
+      document.getElementById("dashTargetBar").style.width = pct+"%";
+      document.getElementById("dashTargetBar").style.background = pct>=100
+        ? "linear-gradient(90deg,var(--ok),#16A34A)"
+        : pct>=60
+          ? "linear-gradient(90deg,var(--warn),#D97706)"
+          : "linear-gradient(90deg,var(--ember-2),var(--ember-3))";
+      document.getElementById("dashTargetCurrent").textContent = rupiah(omzetBulanIni);
+      document.getElementById("dashTargetGoal").textContent = "Target: "+rupiah(target);
+    } else {
+      targetWrap.style.display = "none";
     }
   }
 
@@ -5930,7 +6028,7 @@ document.getElementById("bulkDeleteOldBtn").addEventListener("click",()=>{
     `Storage sekarang: ${Math.round(newBytes/1024)} KB.`);
 });
 
-/* =================== FITUR 9: BACKUP REMINDER (gabungan, v11.12) =================== */
+/* =================== FITUR 9: BACKUP REMINDER (gabungan, v11.13) =================== */
 (function checkBackupReminder(){
   const lastBackup = +localStorage.getItem("servistek_last_backup") || 0;
   const daysSince = lastBackup ? Math.floor((Date.now()-lastBackup)/86400000) : 999;
@@ -6809,8 +6907,12 @@ Total: ${rupiah(entry.total)}${kembalianText}`)) return;
     const hist = loadHistory();
     const idx = hist.findIndex(h=>h.id===entry.id);
     if(idx>=0){
+      const statusLama = hist[idx].status;
       hist[idx].status="selesai";
       hist[idx].dp=entry.total; // dp = full total = lunas
+      // Catat log perubahan status dari kasir
+      if(!Array.isArray(hist[idx].statusLog)) hist[idx].statusLog = [];
+      hist[idx].statusLog.push({ dari: statusLama, ke:"selesai", waktu: new Date().toISOString(), via:"kasir" });
       saveHistory(hist);
       entry.status="selesai";
       entry.dp=entry.total;
@@ -7392,7 +7494,7 @@ setInterval(checkETANotifikasi, 3600000);
 
 <!-- Footer versi -->
 <div class="no-print" style="text-align:center;padding:20px 0 8px;font-family:var(--mono);font-size:10.5px;color:var(--text-faint);letter-spacing:0.5px;">
-  ServisTek <span style="color:var(--ember-2);font-weight:700;">v11.12.0</span> · PWA · Data tersimpan lokal di browser ini
+  ServisTek <span style="color:var(--ember-2);font-weight:700;">v11.13.0</span> · PWA · Data tersimpan lokal di browser ini
   <span id="footerLastBackup" style="display:block;margin-top:3px;"></span>
 </div>
 
@@ -7432,7 +7534,7 @@ window.addEventListener('offline', checkOnline);
 // Delay agar SW sempat load, tidak false-positive
 setTimeout(checkOnline, 1500);
 
-/* CATATAN v11.12: reminder backup sudah digabung menjadi satu sistem
+/* CATATAN v11.13: reminder backup sudah digabung menjadi satu sistem
    (lihat FITUR 9: BACKUP REMINDER di atas, fungsi checkBackupReminder)
    agar tidak muncul dua banner backup sekaligus. */
 
@@ -8112,7 +8214,7 @@ document.getElementById('tvCloseBtn') && document.getElementById('tvCloseBtn').a
 });
 
 /* ================================================================
-   FITUR 10: QR EXPORT / SYNC — v11.12 (QR sungguhan via qrcode.js)
+   FITUR 10: QR EXPORT / SYNC — v11.13 (QR sungguhan via qrcode.js)
    ================================================================ */
 function generateQRSync(){
   const data = {
@@ -8126,7 +8228,7 @@ function generateQRSync(){
     custom_db: loadCustomDB(),
     exported: new Date().toISOString(),
     source: 'ServisTek',
-    version: '11.12.0',
+    version: '11.13.0',
   };
   const json = JSON.stringify(data);
   const blob = new Blob([json], {type:'application/json'});
@@ -8381,7 +8483,7 @@ document.querySelector('.tab[data-view="laporan"]') &&
     setTimeout(renderLaporanAdvanced, 200);
   });
 
-console.log('✅ ServisTek v11.12.0 — Semua fitur baru berhasil dimuat.');
+console.log('✅ ServisTek v11.13.0 — Semua fitur baru berhasil dimuat.');
 
 // Footer backup info
 (function(){
@@ -8399,7 +8501,7 @@ console.log('✅ ServisTek v11.12.0 — Semua fitur baru berhasil dimuat.');
    PWA: Service Worker Registration + Auto-Update
    ================================================================ */
 (function initPWA(){
-  const VERSION = '11.12.0';
+  const VERSION = '11.13.0';
   let swRegistration = null;
   let newWorkerWaiting = false;
 
