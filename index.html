@@ -14,7 +14,7 @@
 <link rel="apple-touch-icon" href="icons/icon-192x192.png">
 <link rel="apple-touch-icon" sizes="152x152" href="icons/icon-152x152.png">
 <link rel="apple-touch-icon" sizes="144x144" href="icons/icon-144x144.png">
-<title>ServisTek v11.13 — Alat Bantu Servis HP</title>
+<title>ServisTek v11.14 — Alat Bantu Servis HP</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" defer></script>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1262,7 +1262,7 @@
       <div class="brand-text">
         <h1>ServisTek</h1>
         <p>Alat Bantu Servis HP</p>
-        <p style="font-family:var(--mono);font-size:10px;color:var(--ember-2);letter-spacing:0.5px;margin-top:1px;">v11.13.0</p>
+        <p style="font-family:var(--mono);font-size:10px;color:var(--ember-2);letter-spacing:0.5px;margin-top:1px;">v11.14.0</p>
       </div>
     </div>
     <div style="display:flex;align-items:center;gap:10px;">
@@ -1271,7 +1271,7 @@
       <button id="pwa-install-btn" onclick="pwaTriggerInstall()" title="Install ServisTek">📲 Install App</button>
   <div class="status-strip">
         <span><span class="status-dot"></span>AKTIF</span>
-        <span style="font-family:var(--mono);font-size:10px;color:var(--ember-2);background:var(--ember-dim);border:1px solid rgba(255,138,61,0.3);padding:2px 7px;border-radius:4px;">v11.13.0</span>
+        <span style="font-family:var(--mono);font-size:10px;color:var(--ember-2);background:var(--ember-dim);border:1px solid rgba(255,138,61,0.3);padding:2px 7px;border-radius:4px;">v11.14.0</span>
         <span id="clock">--:--:--</span>
       </div>
     </div>
@@ -1602,7 +1602,18 @@
         <button class="add-item-btn" id="addItemBtn">+ Tambah item manual (jasa / sparepart)</button>
         <button class="add-item-btn" id="openPaketBtn" style="background:var(--circuit-dim);color:var(--circuit);border-color:rgba(94,234,212,.4);margin-top:6px;">⚡ Pakai Paket Harga</button>
 
-        <div class="field section-gap"><label>Diskon (Rp)</label><input type="number" id="discountInput" value="0" min="0"></div>
+        <div class="field section-gap">
+          <label>Diskon</label>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <div style="display:flex;border:1px solid var(--line-strong);border-radius:var(--r-sm);overflow:hidden;flex-shrink:0;">
+              <button id="discountTypeRp" onclick="setDiscountType('rp')" style="padding:6px 12px;font-family:var(--mono);font-size:12px;font-weight:700;border:none;cursor:pointer;background:var(--ember-dim);color:var(--ember-1);transition:.15s;">Rp</button>
+              <button id="discountTypePct" onclick="setDiscountType('pct')" style="padding:6px 12px;font-family:var(--mono);font-size:12px;font-weight:700;border:none;cursor:pointer;background:var(--panel-2);color:var(--text-faint);transition:.15s;">%</button>
+            </div>
+            <input type="number" id="discountInput" value="0" min="0" style="flex:1;" placeholder="0">
+            <span id="discountPctLabel" style="font-family:var(--mono);font-size:12px;color:var(--text-faint);display:none;">%</span>
+          </div>
+          <p class="helper-text" id="discountHelperText" style="margin-top:4px;display:none;"></p>
+        </div>
         <div class="field"><label>Uang Muka / DP (Rp)</label><input type="number" id="dpInput" value="0" min="0"></div>
         <div class="field"><label>Catatan teknisi</label><textarea id="techNote" rows="2" placeholder="Catatan internal, tidak tercetak di nota pelanggan"></textarea></div>
       </div>
@@ -2219,6 +2230,11 @@
     </div>
     <div class="kasir-txn-list" id="kasirTxnList"></div>
     <div class="kasir-search-big">
+        <!-- Tab switch: Servis vs Aksesori -->
+        <div style="display:flex;gap:0;margin-bottom:12px;border:1px solid var(--line-strong);border-radius:var(--r-sm);overflow:hidden;">
+          <button id="kasirModeServis" onclick="setKasirMode('servis')" style="flex:1;padding:9px;font-family:var(--mono);font-size:12px;font-weight:700;border:none;cursor:pointer;background:var(--ember-dim);color:var(--ember-1);transition:.15s;">🔧 Servis</button>
+          <button id="kasirModeAksesori" onclick="setKasirMode('aksesori')" style="flex:1;padding:9px;font-family:var(--mono);font-size:12px;font-weight:700;border:none;cursor:pointer;background:var(--panel-2);color:var(--text-faint);transition:.15s;">🛍️ Jual Aksesori</button>
+        </div>
         <input type="text" id="kasirSearch" placeholder="Cari tiket, nama, atau No. HP pelanggan..." autocomplete="off">
       </div>
       <div id="kasirResultList" class="kasir-result-list"></div>
@@ -2656,24 +2672,77 @@ function renderItemList(){
 }
 document.getElementById("addItemBtn").addEventListener("click",()=>addItemRow());
 
+let _discountType = 'rp'; // 'rp' atau 'pct'
+
+function setDiscountType(type){
+  _discountType = type;
+  const rpBtn  = document.getElementById("discountTypeRp");
+  const pctBtn = document.getElementById("discountTypePct");
+  const pctLbl = document.getElementById("discountPctLabel");
+  const input  = document.getElementById("discountInput");
+  if(type === 'rp'){
+    rpBtn.style.background  = "var(--ember-dim)";
+    rpBtn.style.color       = "var(--ember-1)";
+    pctBtn.style.background = "var(--panel-2)";
+    pctBtn.style.color      = "var(--text-faint)";
+    pctLbl.style.display    = "none";
+    input.placeholder = "0";
+    input.max = "";
+  } else {
+    pctBtn.style.background = "var(--ember-dim)";
+    pctBtn.style.color      = "var(--ember-1)";
+    rpBtn.style.background  = "var(--panel-2)";
+    rpBtn.style.color       = "var(--text-faint)";
+    pctLbl.style.display    = "";
+    input.placeholder = "0";
+    input.max = "100";
+  }
+  updateTotals();
+}
+
 function updateTotals(){
   const jasa = itemRows.filter(r=>r.type==="jasa").reduce((s,r)=>s+Math.max(0,+r.price||0),0);
-  const part = itemRows.filter(r=>r.type==="part").reduce((s,r)=>s+Math.max(0,+r.price||0),0);
-  const discount = Math.max(0, +document.getElementById("discountInput").value || 0);
+  const part = itemRows.filter(r=>r.type==="part"||r.type==="sparepart").reduce((s,r)=>s+Math.max(0,+r.price||0),0);
+  const subtotal = jasa + part;
+  const discountVal = Math.max(0, +document.getElementById("discountInput").value || 0);
   const dp = Math.max(0, +document.getElementById("dpInput").value || 0);
-  const grand = Math.max(0, jasa+part-discount);
-  const sisa = Math.max(0, grand-dp);
-  document.getElementById("sumJasa").textContent = rupiah(jasa);
-  document.getElementById("sumPart").textContent = rupiah(part);
+
+  // Hitung diskon berdasarkan tipe (nominal atau persentase)
+  let discount = 0;
+  if(_discountType === 'pct'){
+    const pct = Math.min(100, discountVal);
+    discount = Math.round(subtotal * pct / 100);
+    // Tampilkan helper: berapa rupiah yang dihemat
+    const helper = document.getElementById("discountHelperText");
+    if(helper){
+      if(pct > 0 && subtotal > 0){
+        helper.style.display = "";
+        helper.textContent = `Hemat ${rupiah(discount)} dari subtotal ${rupiah(subtotal)}`;
+      } else {
+        helper.style.display = "none";
+      }
+    }
+  } else {
+    discount = Math.min(discountVal, subtotal);
+    const helper = document.getElementById("discountHelperText");
+    if(helper) helper.style.display = "none";
+  }
+
+  const grand = Math.max(0, subtotal - discount);
+  const sisa  = Math.max(0, grand - dp);
+
+  document.getElementById("sumJasa").textContent     = rupiah(jasa);
+  document.getElementById("sumPart").textContent     = rupiah(part);
   document.getElementById("sumDiscount").textContent = "- " + rupiah(discount);
-  document.getElementById("sumGrand").textContent = rupiah(grand);
-  document.getElementById("sumDP").textContent = rupiah(dp);
-  document.getElementById("sumSisa").textContent = rupiah(sisa);
-  if(discount > jasa+part){
-    document.getElementById("sumDiscount").style.color = "var(--bad)";
+  document.getElementById("sumGrand").textContent    = rupiah(grand);
+  document.getElementById("sumDP").textContent       = rupiah(dp);
+  document.getElementById("sumSisa").textContent     = rupiah(sisa);
+
+  if(discount > subtotal){
+    document.getElementById("sumDiscount").style.color  = "var(--bad)";
     document.getElementById("sumDiscount").title = "Diskon melebihi subtotal";
   } else {
-    document.getElementById("sumDiscount").style.color = "";
+    document.getElementById("sumDiscount").style.color  = "";
     document.getElementById("sumDiscount").title = "";
   }
 }
@@ -3120,9 +3189,12 @@ function saveCurrentService({silent=false, clearAfter=true} = {}){
     const statusVal = document.getElementById("custStatus").value;
     const dpVal = Math.max(0, +document.getElementById("dpInput").value || 0);
     const jasa = itemRows.filter(r=>r.type==="jasa").reduce((s,r)=>s+Math.max(0,+r.price||0),0);
-    const part = itemRows.filter(r=>r.type==="part").reduce((s,r)=>s+Math.max(0,+r.price||0),0);
-    const discount = Math.max(0, +document.getElementById("discountInput").value || 0);
-    const totalEst = Math.max(0, jasa+part-discount);
+    const part = itemRows.filter(r=>r.type==="part"||r.type==="sparepart").reduce((s,r)=>s+Math.max(0,+r.price||0),0);
+    const discountRaw = Math.max(0, +document.getElementById("discountInput").value || 0);
+    const discountNom = _discountType === 'pct'
+      ? Math.round((jasa+part) * Math.min(100,discountRaw) / 100)
+      : discountRaw;
+    const totalEst = Math.max(0, jasa+part-discountNom);
     if(statusVal === "selesai" && totalEst > 0 && dpVal < totalEst){
       const pilih = confirm(
         "⚠️ Status dipilih \"Selesai\" tapi belum ada pembayaran.\n\n" +
@@ -3137,8 +3209,12 @@ function saveCurrentService({silent=false, clearAfter=true} = {}){
     }
   }
   const jasa = itemRows.filter(r=>r.type==="jasa").reduce((s,r)=>s+Math.max(0,+r.price||0),0);
-  const part = itemRows.filter(r=>r.type==="part").reduce((s,r)=>s+Math.max(0,+r.price||0),0);
-  const discount = Math.max(0, +document.getElementById("discountInput").value || 0);
+  const part = itemRows.filter(r=>r.type==="part"||r.type==="sparepart").reduce((s,r)=>s+Math.max(0,+r.price||0),0);
+  // Hitung diskon dalam nominal (Rp) — selalu simpan nominal agar konsisten
+  const discountRaw = Math.max(0, +document.getElementById("discountInput").value || 0);
+  const discount = _discountType === 'pct'
+    ? Math.round((jasa+part) * Math.min(100,discountRaw) / 100)
+    : Math.min(discountRaw, jasa+part);
   const dp = Math.max(0, +document.getElementById("dpInput").value || 0);
   const grand = Math.max(0, jasa+part-discount);
 
@@ -3327,6 +3403,7 @@ function renderHistory(resetPage = true){
           <button class="hc-stiker" data-id="${entry.id}" style="background:var(--circuit-dim);color:#5EEAD4;border:1px solid rgba(94,234,212,0.4);border-radius:var(--r-sm);padding:7px 12px;font-family:var(--mono);font-size:11px;font-weight:600;cursor:pointer;transition:.15s;">🏷️ Stiker</button>
           ${(entry.status==='hutang'||entry.status==='belum-lunas')?'<button class="hc-tagih" data-id="'+entry.id+'" style="background:#451010;color:#FCA5A5;border:1px solid rgba(239,68,68,0.5);border-radius:var(--r-sm);padding:7px 12px;font-family:var(--mono);font-size:11px;font-weight:700;cursor:pointer;transition:.15s;">💸 Tagih WA</button>':''}
           <button class="hc-edit" data-id="${entry.id}">✏️ Edit</button>
+          <button class="hc-duplikat" data-id="${entry.id}" title="Buat tiket baru dengan data pelanggan & perangkat yang sama" style="background:none;border:none;color:var(--text-faint);cursor:pointer;font-size:11px;font-family:var(--mono);text-decoration:underline;transition:color .15s;">⧉ Duplikat</button>
           ${entry.status!=='arsip'
             ? `<button class="hc-arsip" data-id="${entry.id}" title="Arsipkan — data aman, bisa dipulihkan kapan saja" style="background:none;border:none;color:var(--text-faint);cursor:pointer;font-size:11px;font-family:var(--mono);text-decoration:underline;transition:color .15s;">🗄 Arsip</button>`
             : `<button class="hc-restore" data-id="${entry.id}" title="Pulihkan dari arsip ke status masuk" style="background:var(--ok-dim);border:1px solid rgba(52,211,153,0.3);color:#9CF0BE;border-radius:var(--r-sm);padding:7px 12px;cursor:pointer;font-size:11px;font-family:var(--mono);font-weight:600;transition:.15s;">↩ Pulihkan</button>`
@@ -3403,6 +3480,48 @@ function _historyClickHandler(e){
       saveHistory(hist);
       renderHistory();
     }
+    return;
+  }
+  if(btn.classList.contains("hc-duplikat")){
+    const entry = loadHistory().find(h=>h.id===id);
+    if(!entry) return;
+    if(!confirm(`Buat tiket baru untuk:\n\n👤 ${entry.name}\n📱 ${entry.device||"—"}\n\nData pelanggan, perangkat, dan keluhan akan disalin. Tiket, tanggal, foto, dan status akan dibuat ulang.\n\nLanjutkan?`)) return;
+    // Reset form kalkulator (bersihkan dulu)
+    editingId = null;
+    clearEditBanner();
+    clearDraft();
+    // Isi form dengan data dari tiket lama (kecuali ID, ticket, date, status, foto)
+    document.getElementById("custName").value      = entry.name || "";
+    document.getElementById("custPhone").value     = entry.phone || "";
+    document.getElementById("custDevice").value    = entry.device || "";
+    document.getElementById("custImei").value      = entry.imei || "";
+    document.getElementById("custComplaint").value = entry.complaint || "";
+    document.getElementById("custStatus").value    = "masuk"; // mulai dari awal
+    document.getElementById("custETA").value       = ""; // ETA baru
+    document.getElementById("custWarranty").value  = entry.warranty || "0";
+    document.getElementById("techNote").value      = "";
+    document.getElementById("discountInput").value = 0;
+    document.getElementById("dpInput").value       = 0;
+    const teknisiEl = document.getElementById("custTeknisi");
+    if(teknisiEl) teknisiEl.value = entry.teknisi || "";
+    // Salin item-item servis (nama + harga, tanpa stok deduct)
+    itemRows = (entry.items||[]).map(r=>({...r, id: rowIdCounter++, _fromStok: null}));
+    renderItemList();
+    fotoList = []; // foto tidak disalin
+    if(typeof renderFotoGrid === "function") renderFotoGrid();
+    // Generate tiket baru
+    generateTicketNum();
+    updateTotals();
+    // Navigasi ke kalkulator
+    navigateTo("kalkulator");
+    setTimeout(()=>{
+      const banner = document.createElement("div");
+      banner.style.cssText = "background:var(--blue-dim);border:1px solid #2E5C8A;color:#A8D4FF;border-radius:8px;padding:10px 14px;margin-bottom:14px;font-family:var(--mono);font-size:11.5px;";
+      banner.innerHTML = `⧉ Duplikat dari tiket <strong>${escapeHtml(entry.ticket)}</strong> — data pelanggan & item sudah disalin. Periksa sebelum simpan.`;
+      const panel = document.querySelector("#view-kalkulator .grid-2 .panel");
+      if(panel) panel.prepend(banner);
+      setTimeout(()=>banner.remove(), 8000);
+    }, 300);
     return;
   }
   if(btn.classList.contains("hc-edit")){
@@ -3761,7 +3880,7 @@ document.getElementById("backupJsonBtn").addEventListener("click",()=>{
   const history = loadHistory();
   const payload = {
     app: "ServisTek",
-    version: "11.13.0",
+    version: "11.14.0",
     exportedAt: new Date().toISOString(),
     ticketCounter: +localStorage.getItem("servistek_ticket_counter") || 0,
     history,
@@ -6028,7 +6147,7 @@ document.getElementById("bulkDeleteOldBtn").addEventListener("click",()=>{
     `Storage sekarang: ${Math.round(newBytes/1024)} KB.`);
 });
 
-/* =================== FITUR 9: BACKUP REMINDER (gabungan, v11.13) =================== */
+/* =================== FITUR 9: BACKUP REMINDER (gabungan, v11.14) =================== */
 (function checkBackupReminder(){
   const lastBackup = +localStorage.getItem("servistek_last_backup") || 0;
   const daysSince = lastBackup ? Math.floor((Date.now()-lastBackup)/86400000) : 999;
@@ -6767,6 +6886,219 @@ document.getElementById("antrianSortBy").addEventListener("change", renderAntria
 
 /* ====== KASIR MODE ====== */
 let kasirActiveEntry = null;
+let _kasirMode = 'servis'; // 'servis' atau 'aksesori'
+
+function setKasirMode(mode){
+  _kasirMode = mode;
+  const servisBtn  = document.getElementById("kasirModeServis");
+  const aksesoriBtn= document.getElementById("kasirModeAksesori");
+  const searchInput= document.getElementById("kasirSearch");
+
+  if(mode === 'servis'){
+    servisBtn.style.background   = "var(--ember-dim)";
+    servisBtn.style.color        = "var(--ember-1)";
+    aksesoriBtn.style.background = "var(--panel-2)";
+    aksesoriBtn.style.color      = "var(--text-faint)";
+    searchInput.placeholder = "Cari tiket, nama, atau No. HP pelanggan...";
+  } else {
+    aksesoriBtn.style.background = "var(--ember-dim)";
+    aksesoriBtn.style.color      = "var(--ember-1)";
+    servisBtn.style.background   = "var(--panel-2)";
+    servisBtn.style.color        = "var(--text-faint)";
+    searchInput.placeholder = "Cari nama aksesori, kategori, merek...";
+  }
+  // Reset panel bayar dan hasil
+  document.getElementById("kasirBayarPanel").style.display = "none";
+  document.getElementById("kasirResultList").innerHTML = "";
+  document.getElementById("kasirEmpty").style.display = "block";
+  searchInput.value = "";
+  searchInput.focus();
+}
+
+/* ── Render hasil pencarian aksesori di kasir ── */
+function renderKasirAksesoriResults(q){
+  const container = document.getElementById("kasirResultList");
+  const emptyEl   = document.getElementById("kasirEmpty");
+  if(!q.trim()){ container.innerHTML=""; emptyEl.style.display="block"; return; }
+
+  const aks = loadAks().filter(a=>{
+    const ql = q.toLowerCase();
+    return [a.nama,a.kategori,a.merk,...(a.kompatibel||[]),...(a.varian||[])].some(v=>v&&v.toLowerCase().includes(ql));
+  });
+
+  emptyEl.style.display = "none";
+  if(!aks.length){
+    container.innerHTML = `<div class="empty-state" style="padding:20px;">Aksesori tidak ditemukan.</div>`;
+    return;
+  }
+
+  container.innerHTML = aks.map(a=>{
+    const habis = (a.jumlah||0) <= 0;
+    const tipis  = !habis && a.jumlah <= (a.min||0);
+    const qtyColor = habis ? "var(--bad)" : tipis ? "var(--warn)" : "var(--ok)";
+    const qtyLabel = habis ? "Habis" : a.jumlah + " pcs";
+    return `<div class="kasir-result-item ${habis?'disabled':''}" data-aks-id="${a.id}"
+      style="${habis?'opacity:0.5;cursor:not-allowed;':''}">
+      <div class="kasir-result-left">
+        <div class="ticket" style="color:var(--circuit);">🛍️ ${escapeHtml(a.kategori)}</div>
+        <div class="name">${escapeHtml(a.nama)}${a.merk?' <span style="color:var(--text-faint);font-size:11px;">· '+escapeHtml(a.merk)+'</span>':''}</div>
+        <div class="device">Stok: <strong style="color:${qtyColor};">${qtyLabel}</strong>
+          ${a.lokasi?' · 📦 '+escapeHtml(a.lokasi):''}</div>
+      </div>
+      <div class="kasir-result-right">
+        <div class="total">${a.hargaJual>0?rupiah(a.hargaJual):'-'}</div>
+        ${habis?`<div class="sisa" style="color:var(--bad);">Stok Habis</div>`:''}
+      </div>
+    </div>`;
+  }).join("");
+
+  // Klik aksesori → panel bayar aksesori
+  container.querySelectorAll(".kasir-result-item:not(.disabled)").forEach(el=>{
+    el.addEventListener("click",()=>{
+      const aksId = +el.dataset.aksId;
+      const item = loadAks().find(a=>a.id===aksId);
+      if(item) openKasirAksesori(item);
+    });
+  });
+}
+
+/* ── Panel bayar aksesori ── */
+function openKasirAksesori(item){
+  const container = document.getElementById("kasirResultList");
+  const bayarEl   = document.getElementById("kasirBayarPanel");
+  const emptyEl   = document.getElementById("kasirEmpty");
+  container.innerHTML = "";
+  emptyEl.style.display = "none";
+  bayarEl.style.display = "block";
+
+  let qty = 1;
+  const maxQty = item.jumlah || 1;
+
+  function render(){
+    const subtotal = (item.hargaJual||0) * qty;
+    bayarEl.innerHTML = `
+      <div class="kasir-bayar-panel">
+        <div class="kasir-bayar-header">
+          <div>
+            <div class="kasir-bayar-ticket" style="font-size:14px;color:var(--circuit);">🛍️ Jual Aksesori</div>
+            <div class="kasir-bayar-name">${escapeHtml(item.nama)}</div>
+            <div class="kasir-bayar-device">${escapeHtml(item.kategori)}${item.merk?' · '+escapeHtml(item.merk):''}</div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-family:var(--mono);font-size:10px;color:var(--text-faint);">Stok tersedia</div>
+            <div style="font-family:var(--mono);font-size:18px;font-weight:700;color:var(--ok);">${item.jumlah} pcs</div>
+          </div>
+        </div>
+
+        <!-- Qty picker -->
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;padding:12px;background:var(--bg-2);border-radius:var(--r-md);border:1px solid var(--line);">
+          <span style="font-family:var(--mono);font-size:12px;color:var(--text-dim);">Jumlah:</span>
+          <div style="display:flex;align-items:center;gap:12px;">
+            <button id="aksQtyMinus" style="width:34px;height:34px;border-radius:8px;border:1px solid var(--line-strong);background:var(--panel-2);color:var(--text);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;">−</button>
+            <span id="aksQtyVal" style="font-family:var(--mono);font-size:22px;font-weight:700;min-width:32px;text-align:center;">${qty}</span>
+            <button id="aksQtyPlus" style="width:34px;height:34px;border-radius:8px;border:1px solid var(--line-strong);background:var(--panel-2);color:var(--text);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;">+</button>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-family:var(--mono);font-size:11px;color:var(--text-faint);">@ ${rupiah(item.hargaJual||0)}</div>
+            <div style="font-family:var(--mono);font-size:16px;font-weight:700;color:var(--ember-1);">${rupiah(subtotal)}</div>
+          </div>
+        </div>
+
+        <!-- Input nama pembeli (opsional) -->
+        <div style="margin-bottom:14px;">
+          <label style="font-family:var(--mono);font-size:11px;color:var(--text-faint);display:block;margin-bottom:4px;">Nama Pembeli (opsional)</label>
+          <input type="text" id="aksBuyerName" placeholder="Nama pelanggan..." value=""
+            style="width:100%;background:var(--bg-2);border:1px solid var(--line-strong);border-radius:var(--r-sm);padding:9px 12px;color:var(--text);font-size:13px;box-sizing:border-box;">
+        </div>
+
+        <button id="aksJualBtn" class="kasir-lunas-btn" style="margin-bottom:10px;">✅ Konfirmasi Penjualan · ${rupiah(subtotal)}</button>
+        <button id="aksBackBtn" class="kasir-close-btn">← Kembali</button>
+      </div>`;
+
+    document.getElementById("aksQtyMinus").addEventListener("click",()=>{ if(qty>1){ qty--; render(); } });
+    document.getElementById("aksQtyPlus").addEventListener("click",()=>{ if(qty<maxQty){ qty++; render(); } });
+    document.getElementById("aksBackBtn").addEventListener("click", resetKasir);
+    document.getElementById("aksJualBtn").addEventListener("click",()=>{
+      const buyer = document.getElementById("aksBuyerName").value.trim();
+      const total = (item.hargaJual||0) * qty;
+      if(!confirm(`Konfirmasi penjualan:\n\n🛍️ ${item.nama}\nJumlah: ${qty} pcs\nTotal: ${rupiah(total)}${buyer?'\nPembeli: '+buyer:''}\n\nStok akan dikurangi ${qty} pcs. Lanjutkan?`)) return;
+
+      // Kurangi stok aksesori
+      const aksData = loadAks();
+      const idx = aksData.findIndex(a=>a.id===item.id);
+      if(idx>=0){
+        aksData[idx].jumlah = Math.max(0, (aksData[idx].jumlah||0) - qty);
+        saveAks(aksData);
+        addAksLog("out", item.nama, qty, `Terjual${buyer?' ke '+buyer:''} via Kasir`);
+      }
+
+      // Catat ke riwayat kasir hari ini (untuk laporan omzet)
+      renderKasirToday();
+
+      // Tampilkan struk sukses
+      bayarEl.innerHTML = `
+        <div class="kasir-bayar-panel" style="text-align:center;padding:30px;">
+          <div style="font-size:48px;margin-bottom:12px;">✅</div>
+          <div style="font-size:18px;font-weight:700;margin-bottom:6px;">Penjualan Berhasil!</div>
+          <div style="font-family:var(--mono);font-size:13px;color:var(--text-dim);margin-bottom:20px;">
+            ${escapeHtml(item.nama)} × ${qty} = ${rupiah(total)}${buyer?' · '+escapeHtml(buyer):''}
+          </div>
+          <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
+            <button id="aksCetakStruk" class="print-btn" style="flex:1;max-width:200px;">🧾 Cetak Struk</button>
+            <button id="aksJualLagi" class="kasir-close-btn" style="flex:1;max-width:200px;">← Jual Lagi</button>
+          </div>
+        </div>`;
+
+      document.getElementById("aksJualLagi").addEventListener("click", resetKasir);
+      document.getElementById("aksCetakStruk").addEventListener("click",()=>{
+        printStrukAksesori({ nama:item.nama, qty, harga:item.hargaJual||0, total, buyer });
+      });
+    });
+  }
+  render();
+}
+
+/* ── Struk aksesori (thermal) ── */
+function printStrukAksesori({ nama, qty, harga, total, buyer }){
+  const p = loadProfil();
+  const tokoNama = p.nama || "ServisTek";
+  const tokoWA   = p.wa || p.telp || "";
+  const now = new Date();
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
+  <title>Struk Aksesori</title>
+  <style>
+    @page{size:58mm auto;margin:4mm 3mm;}
+    body{font-family:"Courier New",monospace;font-size:11px;width:52mm;margin:0;padding:0;color:#000;}
+    .center{text-align:center;} .bold{font-weight:bold;} .big{font-size:14px;font-weight:bold;}
+    .divider{border:none;border-top:1px dashed #555;margin:4px 0;}
+    table{width:100%;border-collapse:collapse;} td{font-size:11px;vertical-align:top;}
+    .total-row td{font-weight:bold;font-size:13px;border-top:1px solid #000;padding-top:3px;}
+    .footer{font-size:9px;text-align:center;color:#444;margin-top:4px;}
+  </style></head><body>
+  <div class="center bold big">${escapeHtml(tokoNama)}</div>
+  ${tokoWA?`<div class="center" style="font-size:9px;">WA: ${escapeHtml(tokoWA)}</div>`:""}
+  <hr class="divider">
+  <table>
+    <tr><td>Tanggal</td><td style="text-align:right;">${now.toLocaleDateString("id-ID")} ${now.toLocaleTimeString("id-ID",{hour:"2-digit",minute:"2-digit"})}</td></tr>
+    ${buyer?`<tr><td>Pembeli</td><td style="text-align:right;">${escapeHtml(buyer)}</td></tr>`:""}
+  </table>
+  <hr class="divider">
+  <div style="font-size:9px;font-weight:bold;margin:2px 0;">ITEM:</div>
+  <table>
+    <tr><td colspan="2">${escapeHtml(nama)}</td></tr>
+    <tr><td>${qty} pcs × ${rupiah(harga)}</td><td style="text-align:right;">${rupiah(total)}</td></tr>
+    <tr class="total-row"><td>TOTAL</td><td style="text-align:right;">${rupiah(total)}</td></tr>
+  </table>
+  <hr class="divider">
+  <div class="footer">Terima kasih atas pembelian Anda!</div>
+  </body></html>`;
+  const win = window.open("","_blank","width:300,height:400");
+  if(!win){ alert("Popup diblokir. Izinkan popup untuk cetak struk."); return; }
+  win.document.write(html);
+  win.document.close();
+  win.focus();
+  setTimeout(()=>win.print(), 400);
+}
 
 function renderKasirResults(q){
   const container = document.getElementById("kasirResultList");
@@ -6992,7 +7324,13 @@ function resetKasir(){
 let kasirSearchTimer=null;
 document.getElementById("kasirSearch").addEventListener("input",(e)=>{
   clearTimeout(kasirSearchTimer);
-  kasirSearchTimer = setTimeout(()=> renderKasirResults(e.target.value), 200);
+  kasirSearchTimer = setTimeout(()=>{
+    if(_kasirMode === 'aksesori'){
+      renderKasirAksesoriResults(e.target.value);
+    } else {
+      renderKasirResults(e.target.value);
+    }
+  }, 200);
 });
 
 
@@ -7494,7 +7832,7 @@ setInterval(checkETANotifikasi, 3600000);
 
 <!-- Footer versi -->
 <div class="no-print" style="text-align:center;padding:20px 0 8px;font-family:var(--mono);font-size:10.5px;color:var(--text-faint);letter-spacing:0.5px;">
-  ServisTek <span style="color:var(--ember-2);font-weight:700;">v11.13.0</span> · PWA · Data tersimpan lokal di browser ini
+  ServisTek <span style="color:var(--ember-2);font-weight:700;">v11.14.0</span> · PWA · Data tersimpan lokal di browser ini
   <span id="footerLastBackup" style="display:block;margin-top:3px;"></span>
 </div>
 
@@ -7534,7 +7872,7 @@ window.addEventListener('offline', checkOnline);
 // Delay agar SW sempat load, tidak false-positive
 setTimeout(checkOnline, 1500);
 
-/* CATATAN v11.13: reminder backup sudah digabung menjadi satu sistem
+/* CATATAN v11.14: reminder backup sudah digabung menjadi satu sistem
    (lihat FITUR 9: BACKUP REMINDER di atas, fungsi checkBackupReminder)
    agar tidak muncul dua banner backup sekaligus. */
 
@@ -8214,7 +8552,7 @@ document.getElementById('tvCloseBtn') && document.getElementById('tvCloseBtn').a
 });
 
 /* ================================================================
-   FITUR 10: QR EXPORT / SYNC — v11.13 (QR sungguhan via qrcode.js)
+   FITUR 10: QR EXPORT / SYNC — v11.14 (QR sungguhan via qrcode.js)
    ================================================================ */
 function generateQRSync(){
   const data = {
@@ -8228,7 +8566,7 @@ function generateQRSync(){
     custom_db: loadCustomDB(),
     exported: new Date().toISOString(),
     source: 'ServisTek',
-    version: '11.13.0',
+    version: '11.14.0',
   };
   const json = JSON.stringify(data);
   const blob = new Blob([json], {type:'application/json'});
@@ -8483,7 +8821,7 @@ document.querySelector('.tab[data-view="laporan"]') &&
     setTimeout(renderLaporanAdvanced, 200);
   });
 
-console.log('✅ ServisTek v11.13.0 — Semua fitur baru berhasil dimuat.');
+console.log('✅ ServisTek v11.14.0 — Semua fitur baru berhasil dimuat.');
 
 // Footer backup info
 (function(){
@@ -8501,7 +8839,7 @@ console.log('✅ ServisTek v11.13.0 — Semua fitur baru berhasil dimuat.');
    PWA: Service Worker Registration + Auto-Update
    ================================================================ */
 (function initPWA(){
-  const VERSION = '11.13.0';
+  const VERSION = '11.14.0';
   let swRegistration = null;
   let newWorkerWaiting = false;
 
