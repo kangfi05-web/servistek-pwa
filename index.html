@@ -14,7 +14,7 @@
 <link rel="apple-touch-icon" href="icons/icon-192x192.png">
 <link rel="apple-touch-icon" sizes="152x152" href="icons/icon-152x152.png">
 <link rel="apple-touch-icon" sizes="144x144" href="icons/icon-144x144.png">
-<title>ServisTek v11.14 — Alat Bantu Servis HP</title>
+<title>ServisTek v11.15 — Alat Bantu Servis HP</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" defer></script>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1262,7 +1262,7 @@
       <div class="brand-text">
         <h1>ServisTek</h1>
         <p>Alat Bantu Servis HP</p>
-        <p style="font-family:var(--mono);font-size:10px;color:var(--ember-2);letter-spacing:0.5px;margin-top:1px;">v11.14.0</p>
+        <p style="font-family:var(--mono);font-size:10px;color:var(--ember-2);letter-spacing:0.5px;margin-top:1px;">v11.15.0</p>
       </div>
     </div>
     <div style="display:flex;align-items:center;gap:10px;">
@@ -1271,7 +1271,7 @@
       <button id="pwa-install-btn" onclick="pwaTriggerInstall()" title="Install ServisTek">📲 Install App</button>
   <div class="status-strip">
         <span><span class="status-dot"></span>AKTIF</span>
-        <span style="font-family:var(--mono);font-size:10px;color:var(--ember-2);background:var(--ember-dim);border:1px solid rgba(255,138,61,0.3);padding:2px 7px;border-radius:4px;">v11.14.0</span>
+        <span style="font-family:var(--mono);font-size:10px;color:var(--ember-2);background:var(--ember-dim);border:1px solid rgba(255,138,61,0.3);padding:2px 7px;border-radius:4px;">v11.15.0</span>
         <span id="clock">--:--:--</span>
       </div>
     </div>
@@ -2046,8 +2046,7 @@
           <div class="field"><label>Nomor Telepon Lain</label><input type="text" id="profilTelp" placeholder="opsional"></div>
         </div>
         <div class="field"><label>Catatan Nota (bawah nota)</label><textarea id="profilCatatan" rows="2" placeholder="contoh: Terima kasih atas kepercayaan Anda. Garansi berlaku sesuai tertulis."></textarea></div>
-        <button class="profil-save-btn" id="simpanProfilBtn">💾 Simpan Profil Toko</button>
-        <p class="helper-text" style="margin-top:10px;">Profil toko akan muncul di header nota cetak dan menggantikan nama "ServisTek" bawaan.</p>
+        <p class="helper-text" style="margin-top:10px;">Profil toko akan muncul di header nota cetak.</p>
 
         <!-- TARGET OMZET -->
         <div class="profil-teknisi-section">
@@ -2055,8 +2054,7 @@
           <div class="field"><label>Target omzet bulan ini (Rp)</label>
             <input type="number" id="targetOmzetInput" placeholder="contoh: 5000000" min="0">
           </div>
-          <button class="profil-save-btn" id="simpanTargetBtn" style="margin-top:6px;">💾 Simpan Target</button>
-          <p class="helper-text" style="margin-top:8px;">Target akan ditampilkan sebagai progress bar di tab Laporan.</p>
+          <p class="helper-text" style="margin-top:8px;">Target akan ditampilkan sebagai progress bar di tab Laporan dan Dashboard.</p>
         </div>
 
         <!-- MANAJEMEN TEKNISI -->
@@ -2068,13 +2066,13 @@
             <div class="field" style="margin-bottom:0;"><label>PIN 4 digit</label><input type="password" id="newTeknisiPin" maxlength="4" inputmode="numeric" pattern="[0-9]*" placeholder="● ● ● ●"></div>
             <button class="primary-btn" id="addTeknisiBtn" style="margin-top:0;width:auto;padding:11px 16px;">+ Tambah</button>
           </div>
-          <p class="helper-text" style="margin-top:8px;">Teknisi bisa dipilih di tab Kalkulator. PIN digunakan untuk memverifikasi identitas saat perlu.</p>
+          <p class="helper-text" style="margin-top:8px;">Teknisi bisa dipilih di tab Kalkulator.</p>
         </div>
 
         <!-- TEMPLATE WA KUSTOMISASI -->
         <div class="profil-teknisi-section">
           <div class="panel-title" style="margin-bottom:14px;">✉️ Template Pesan WA</div>
-          <p class="helper-text" style="margin-bottom:14px;">Kustomisasi isi pesan WA yang dikirim ke pelanggan. Variabel: {nama}, {tiket}, {hp}, {total}, {sisa}, {garansi}, {toko}</p>
+          <p class="helper-text" style="margin-bottom:14px;">Kustomisasi isi pesan WA. Variabel: {nama}, {tiket}, {hp}, {total}, {sisa}, {garansi}, {toko}</p>
           <div class="wa-template-card">
             <div class="wa-template-title">📬 Notifikasi HP Selesai</div>
             <textarea id="tplSelesai" rows="5" style="width:100%;background:var(--bg-2);border:1px solid var(--line);border-radius:var(--r-sm);padding:10px 12px;color:var(--text);font-size:12px;font-family:var(--mono);outline:none;resize:vertical;line-height:1.6;"></textarea>
@@ -2087,32 +2085,39 @@
             <div class="wa-template-title">📅 Pengingat Ambil HP (Blast)</div>
             <textarea id="tplBlast" rows="5" style="width:100%;background:var(--bg-2);border:1px solid var(--line);border-radius:var(--r-sm);padding:10px 12px;color:var(--text);font-size:12px;font-family:var(--mono);outline:none;resize:vertical;line-height:1.6;"></textarea>
           </div>
-          <button class="profil-save-btn" id="simpanTemplateBtn" style="margin-top:6px;">💾 Simpan Template WA</button>
+        </div>
 
-          <!-- WA BLAST PANEL -->
-          <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--line);">
-            <div class="panel-title" style="margin-bottom:10px;">📣 Kirim WA Blast</div>
-            <p style="font-size:12.5px;color:var(--text-dim);margin:0 0 12px;">Kirim pesan pengingat ke beberapa pelanggan sekaligus menggunakan template Blast di atas.</p>
-            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
-              <select id="blastFilterSel" style="background:var(--bg-2);border:1px solid var(--line-strong);border-radius:var(--r-sm);padding:8px 12px;color:var(--text);font-family:var(--mono);font-size:12px;flex:1;min-width:160px;">
-                <option value="selesai_belum_ambil">HP Selesai, Belum Diambil &gt;2 hari</option>
-                <option value="proses_lama">Masih Proses &gt;7 hari</option>
-                <option value="hutang">Ada Piutang / Belum Lunas</option>
-                <option value="semua_aktif">Semua Servis Aktif</option>
-              </select>
-              <button id="blastLoadBtn" style="background:var(--ember-dim);color:var(--ember-1);border:1px solid rgba(255,138,61,.4);border-radius:var(--r-sm);padding:8px 16px;font-family:var(--mono);font-size:12px;font-weight:700;cursor:pointer;">🔍 Cari Penerima</button>
-            </div>
-            <div id="blastRecipientList" style="display:none;margin-bottom:10px;">
-              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
-                <span id="blastCountLabel" style="font-family:var(--mono);font-size:11.5px;color:var(--text-dim);">0 penerima</span>
-                <label style="font-family:var(--mono);font-size:11px;cursor:pointer;color:var(--text-dim);">
-                  <input type="checkbox" id="blastCheckAll" style="margin-right:4px;">Pilih semua
-                </label>
-              </div>
-              <div id="blastItems" style="display:flex;flex-direction:column;gap:5px;max-height:220px;overflow-y:auto;"></div>
-            </div>
-            <button id="blastKirimBtn" style="display:none;width:100%;background:linear-gradient(135deg,#25D366,#128C7E);color:white;border:none;border-radius:var(--r-sm);padding:12px;font-family:var(--mono);font-size:13px;font-weight:700;cursor:pointer;">💬 Buka WA untuk Penerima Terpilih</button>
+        <!-- TOMBOL SIMPAN TUNGGAL -->
+        <div style="margin-top:20px;padding-top:16px;border-top:2px solid var(--line);">
+          <button class="profil-save-btn" id="simpanSemuaBtn" style="width:100%;padding:14px;font-size:14px;">
+            💾 Simpan Semua Pengaturan
+          </button>
+          <p class="helper-text" style="text-align:center;margin-top:8px;">Menyimpan: profil toko, logo, target omzet, dan template WA sekaligus.</p>
+        </div>
+
+        <!-- WA BLAST PANEL -->
+        <div class="profil-teknisi-section">
+          <div class="panel-title" style="margin-bottom:10px;">📣 Kirim WA Blast</div>
+          <p style="font-size:12.5px;color:var(--text-dim);margin:0 0 12px;">Kirim pesan pengingat ke beberapa pelanggan sekaligus menggunakan template Blast di atas.</p>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
+            <select id="blastFilterSel" style="background:var(--bg-2);border:1px solid var(--line-strong);border-radius:var(--r-sm);padding:8px 12px;color:var(--text);font-family:var(--mono);font-size:12px;flex:1;min-width:160px;">
+              <option value="selesai_belum_ambil">HP Selesai, Belum Diambil &gt;2 hari</option>
+              <option value="proses_lama">Masih Proses &gt;7 hari</option>
+              <option value="hutang">Ada Piutang / Belum Lunas</option>
+              <option value="semua_aktif">Semua Servis Aktif</option>
+            </select>
+            <button id="blastLoadBtn" style="background:var(--ember-dim);color:var(--ember-1);border:1px solid rgba(255,138,61,.4);border-radius:var(--r-sm);padding:8px 16px;font-family:var(--mono);font-size:12px;font-weight:700;cursor:pointer;">🔍 Cari Penerima</button>
           </div>
+          <div id="blastRecipientList" style="display:none;margin-bottom:10px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+              <span id="blastCountLabel" style="font-family:var(--mono);font-size:11.5px;color:var(--text-dim);">0 penerima</span>
+              <label style="font-family:var(--mono);font-size:11px;cursor:pointer;color:var(--text-dim);">
+                <input type="checkbox" id="blastCheckAll" style="margin-right:4px;">Pilih semua
+              </label>
+            </div>
+            <div id="blastItems" style="display:flex;flex-direction:column;gap:5px;max-height:220px;overflow-y:auto;"></div>
+          </div>
+          <button id="blastKirimBtn" style="display:none;width:100%;background:linear-gradient(135deg,#25D366,#128C7E);color:white;border:none;border-radius:var(--r-sm);padding:12px;font-family:var(--mono);font-size:13px;font-weight:700;cursor:pointer;">💬 Buka WA untuk Penerima Terpilih</button>
         </div>
       </div>
       <div>
@@ -3396,12 +3401,20 @@ function renderHistory(resetPage = true){
           ${(entry.status==='belum-lunas')?`<span class="badge-belum-lunas">🟡 Selesai — Belum Lunas</span>`:""}
           ${(entry.status==='selesai' && (entry.dp||0)<(entry.total||0) && (entry.total||0)>0)?`<span class="badge-belum-lunas" style="background:#2A1A00;color:#FFD080;border-color:rgba(255,191,36,0.5);">⚠️ Selesai — Belum Dibayar</span>`:""}
           ${garansiText?`<span class="hc-garansi">${garansiText}</span>`:""}
-        </div>
+          ${entry.status==='selesai'?(()=>{
+            if(entry.takenAt){
+              const tgl = new Date(entry.takenAt).toLocaleDateString("id-ID",{day:"numeric",month:"short",year:"numeric"});
+              return `<span style="background:rgba(52,211,153,.15);color:#34D399;border:1px solid rgba(52,211,153,.35);border-radius:5px;padding:3px 9px;font-family:var(--mono);font-size:10px;font-weight:700;">✅ Sudah Diambil · ${tgl}</span>`;
+            } else {
+              return `<span style="background:rgba(251,191,36,.12);color:#FCD34D;border:1px solid rgba(251,191,36,.35);border-radius:5px;padding:3px 9px;font-family:var(--mono);font-size:10px;font-weight:700;">⏳ Belum Diambil</span>`;
+            }
+          })():""}        </div>
         <div class="hc-actions">
           <button class="hc-print" data-id="${entry.id}">🖨️ Nota</button>
           <button class="hc-wa" data-id="${entry.id}" style="background:var(--ok-dim);color:#9CF0BE;border:1px solid rgba(52,211,153,0.4);border-radius:var(--r-sm);padding:7px 12px;font-family:var(--mono);font-size:11px;font-weight:600;cursor:pointer;transition:.15s;">💬 WA</button>
           <button class="hc-stiker" data-id="${entry.id}" style="background:var(--circuit-dim);color:#5EEAD4;border:1px solid rgba(94,234,212,0.4);border-radius:var(--r-sm);padding:7px 12px;font-family:var(--mono);font-size:11px;font-weight:600;cursor:pointer;transition:.15s;">🏷️ Stiker</button>
           ${(entry.status==='hutang'||entry.status==='belum-lunas')?'<button class="hc-tagih" data-id="'+entry.id+'" style="background:#451010;color:#FCA5A5;border:1px solid rgba(239,68,68,0.5);border-radius:var(--r-sm);padding:7px 12px;font-family:var(--mono);font-size:11px;font-weight:700;cursor:pointer;transition:.15s;">💸 Tagih WA</button>':''}
+          ${entry.status==='selesai' ? `<button class="hc-taken" data-id="${entry.id}" title="${entry.takenAt?'Batalkan sudah diambil':'Tandai HP sudah diambil pelanggan'}" style="background:${entry.takenAt?'rgba(52,211,153,.15)':'var(--panel-2)'};color:${entry.takenAt?'#34D399':'var(--text-dim)'};border:1px solid ${entry.takenAt?'rgba(52,211,153,.4)':'var(--line-strong)'};border-radius:var(--r-sm);padding:7px 12px;font-family:var(--mono);font-size:11px;font-weight:600;cursor:pointer;transition:.15s;">${entry.takenAt?'✅ Diambil':'📦 Tandai Diambil'}</button>` : ''}
           <button class="hc-edit" data-id="${entry.id}">✏️ Edit</button>
           <button class="hc-duplikat" data-id="${entry.id}" title="Buat tiket baru dengan data pelanggan & perangkat yang sama" style="background:none;border:none;color:var(--text-faint);cursor:pointer;font-size:11px;font-family:var(--mono);text-decoration:underline;transition:color .15s;">⧉ Duplikat</button>
           ${entry.status!=='arsip'
@@ -3436,9 +3449,13 @@ function renderHistory(resetPage = true){
     container.appendChild(endEl);
   }
 
-  // Event delegation: satu listener untuk semua tombol di container
-  container.addEventListener("click", _historyClickHandler, {once: true});
-  container.addEventListener("change", _historyChangeHandler, {once: true});
+  // Event delegation PERMANEN — dipasang SEKALI saja saat pertama render
+  // Flag _histDelegated mencegah penambahan listener duplikat saat renderHistory dipanggil ulang
+  if(!container._histDelegated){
+    container._histDelegated = true;
+    container.addEventListener("click", _historyClickHandler);
+    container.addEventListener("change", _historyChangeHandler);
+  }
 }
 
 function _historyClickHandler(e){
@@ -3544,12 +3561,28 @@ function _historyClickHandler(e){
     if(entry) printStikerTiket(entry);
     return;
   }
+  if(btn.classList.contains("hc-taken")){
+    const hist = loadHistory();
+    const item = hist.find(h=>h.id===id);
+    if(!item) return;
+    if(item.takenAt){
+      // Batalkan
+      if(!confirm("Batalkan status 'Sudah Diambil' untuk tiket ini?")) return;
+      delete item.takenAt;
+    } else {
+      // Tandai sudah diambil
+      item.takenAt = new Date().toISOString();
+      if(!Array.isArray(item.statusLog)) item.statusLog = [];
+      item.statusLog.push({ dari:"selesai", ke:"diambil", waktu: item.takenAt });
+    }
+    saveHistory(hist);
+    renderHistory(false); // false = pertahankan halaman saat ini
+    return;
+  }
   if(btn.classList.contains("hc-tagih")){
     sendWATagihan(String(btn.dataset.id));
     return;
   }
-  // Re-attach listener jika klik di luar tombol aksi
-  e.currentTarget.addEventListener("click", _historyClickHandler, {once: true});
 }
 
 function _historyChangeHandler(e){
@@ -3564,7 +3597,10 @@ function _historyChangeHandler(e){
     item.status = statusBaru;
     if(statusBaru==='selesai'||statusBaru==='belum-lunas'){
       if(!item.paidDate) item.paidDate = new Date().toISOString();
-    } else { delete item.paidDate; }
+    } else {
+      delete item.paidDate;
+      delete item.takenAt; // reset taken jika status berubah dari selesai
+    }
 
     // Catat log perubahan status
     if(statusLama !== statusBaru){
@@ -3880,7 +3916,7 @@ document.getElementById("backupJsonBtn").addEventListener("click",()=>{
   const history = loadHistory();
   const payload = {
     app: "ServisTek",
-    version: "11.14.0",
+    version: "11.15.0",
     exportedAt: new Date().toISOString(),
     ticketCounter: +localStorage.getItem("servistek_ticket_counter") || 0,
     history,
@@ -4155,22 +4191,46 @@ document.getElementById("hapusLogoBtn").addEventListener("click",()=>{
   updateProfilPreview();
 });
 
-document.getElementById("simpanProfilBtn").addEventListener("click",()=>{
+// ── SIMPAN SEMUA PENGATURAN (satu tombol) ──
+document.getElementById("simpanSemuaBtn").addEventListener("click",()=>{
+  // 1. Simpan profil toko (WAJIB: pertahankan logo yang sudah ada)
+  const pLama = loadProfil(); // ambil dulu agar logo tidak terhapus
   const p = {
-    nama: document.getElementById("profilNama").value.trim(),
-    tagline: document.getElementById("profilTagline").value.trim(),
-    alamat: document.getElementById("profilAlamat").value.trim(),
-    wa: document.getElementById("profilWA").value.trim(),
-    telp: document.getElementById("profilTelp").value.trim(),
-    catatan: document.getElementById("profilCatatan").value.trim(),
+    ...pLama, // spread dulu (termasuk logo, jika ada)
+    nama:     document.getElementById("profilNama").value.trim(),
+    tagline:  document.getElementById("profilTagline").value.trim(),
+    alamat:   document.getElementById("profilAlamat").value.trim(),
+    wa:       document.getElementById("profilWA").value.trim(),
+    telp:     document.getElementById("profilTelp").value.trim(),
+    catatan:  document.getElementById("profilCatatan").value.trim(),
   };
   saveProfil(p);
-  // Update brand in header if nama toko diisi
   if(p.nama){
     document.querySelector(".brand-text h1").textContent = p.nama;
     document.title = p.nama + " — ServisTek";
   }
-  alert("✅ Profil toko berhasil disimpan. Akan tampil di nota cetak.");
+
+  // 2. Simpan target omzet
+  const targetVal = +document.getElementById("targetOmzetInput").value || 0;
+  saveTarget(targetVal);
+
+  // 3. Simpan template WA
+  const t = {
+    selesai: document.getElementById("tplSelesai").value,
+    hutang:  document.getElementById("tplHutang").value,
+    blast:   document.getElementById("tplBlast").value,
+  };
+  saveWATemplates(t);
+
+  // Feedback visual
+  const btn = document.getElementById("simpanSemuaBtn");
+  const origText = btn.innerHTML;
+  btn.innerHTML = "✅ Semua pengaturan berhasil disimpan!";
+  btn.style.background = "linear-gradient(135deg,var(--ok),#16A34A)";
+  setTimeout(()=>{
+    btn.innerHTML = origText;
+    btn.style.background = "";
+  }, 2500);
 });
 
 // Init profil on load
@@ -5768,12 +5828,13 @@ function renderDashboard(){
     .filter(h=> h.status==="selesai" && h.paidDate && new Date(h.paidDate).getTime() >= todayStart && new Date(h.paidDate).getTime() < todayEnd)
     .reduce((s,h)=> s+(h.total||0), 0);
 
-  // Selesai tapi belum diambil > 2 hari
+  // Selesai tapi belum diambil > 2 hari (cek takenAt)
   const batasAmbil = todayStart - 2*86400000;
   const selesaiBelumAmbil = hist.filter(h=>{
     if(h.status !== "selesai") return false;
-    const siap = h.paidDate ? new Date(h.paidDate).getTime() : new Date(h.date).getTime();
-    return siap < batasAmbil;
+    if(h.takenAt) return false; // sudah diambil
+    const selesaiTime = h.paidDate ? new Date(h.paidDate).getTime() : new Date(h.date).getTime();
+    return selesaiTime < batasAmbil;
   });
 
   // Render KPI
@@ -6147,7 +6208,7 @@ document.getElementById("bulkDeleteOldBtn").addEventListener("click",()=>{
     `Storage sekarang: ${Math.round(newBytes/1024)} KB.`);
 });
 
-/* =================== FITUR 9: BACKUP REMINDER (gabungan, v11.14) =================== */
+/* =================== FITUR 9: BACKUP REMINDER (gabungan, v11.15) =================== */
 (function checkBackupReminder(){
   const lastBackup = +localStorage.getItem("servistek_last_backup") || 0;
   const daysSince = lastBackup ? Math.floor((Date.now()-lastBackup)/86400000) : 999;
@@ -6524,14 +6585,6 @@ if(document.getElementById("addTeknisiBtn")){
 function loadTarget(){ return +localStorage.getItem("servistek_target_omzet")||0; }
 function saveTarget(v){ safeSetItem("servistek_target_omzet", v); }
 
-if(document.getElementById("simpanTargetBtn")){
-  document.getElementById("simpanTargetBtn").addEventListener("click",()=>{
-    const v = Math.max(0, +document.getElementById("targetOmzetInput").value||0);
-    saveTarget(v);
-    alert("✅ Target omzet Rp "+v.toLocaleString("id-ID")+" disimpan.");
-    renderTargetBar();
-  });
-}
 
 function renderTargetBar(){
   const target = loadTarget();
@@ -6625,17 +6678,6 @@ function initWATemplateInputs(){
   });
 }
 
-if(document.getElementById("simpanTemplateBtn")){
-  document.getElementById("simpanTemplateBtn").addEventListener("click",()=>{
-    const t = {
-      selesai: document.getElementById("tplSelesai").value,
-      hutang: document.getElementById("tplHutang").value,
-      blast: document.getElementById("tplBlast").value,
-    };
-    saveWATemplates(t);
-    alert("✅ Template WA berhasil disimpan.");
-  });
-}
 initWATemplateInputs();
 
 /* ── WA BLAST LOGIC ── */
@@ -7832,7 +7874,7 @@ setInterval(checkETANotifikasi, 3600000);
 
 <!-- Footer versi -->
 <div class="no-print" style="text-align:center;padding:20px 0 8px;font-family:var(--mono);font-size:10.5px;color:var(--text-faint);letter-spacing:0.5px;">
-  ServisTek <span style="color:var(--ember-2);font-weight:700;">v11.14.0</span> · PWA · Data tersimpan lokal di browser ini
+  ServisTek <span style="color:var(--ember-2);font-weight:700;">v11.15.0</span> · PWA · Data tersimpan lokal di browser ini
   <span id="footerLastBackup" style="display:block;margin-top:3px;"></span>
 </div>
 
@@ -7872,7 +7914,7 @@ window.addEventListener('offline', checkOnline);
 // Delay agar SW sempat load, tidak false-positive
 setTimeout(checkOnline, 1500);
 
-/* CATATAN v11.14: reminder backup sudah digabung menjadi satu sistem
+/* CATATAN v11.15: reminder backup sudah digabung menjadi satu sistem
    (lihat FITUR 9: BACKUP REMINDER di atas, fungsi checkBackupReminder)
    agar tidak muncul dua banner backup sekaligus. */
 
@@ -8552,7 +8594,7 @@ document.getElementById('tvCloseBtn') && document.getElementById('tvCloseBtn').a
 });
 
 /* ================================================================
-   FITUR 10: QR EXPORT / SYNC — v11.14 (QR sungguhan via qrcode.js)
+   FITUR 10: QR EXPORT / SYNC — v11.15 (QR sungguhan via qrcode.js)
    ================================================================ */
 function generateQRSync(){
   const data = {
@@ -8566,7 +8608,7 @@ function generateQRSync(){
     custom_db: loadCustomDB(),
     exported: new Date().toISOString(),
     source: 'ServisTek',
-    version: '11.14.0',
+    version: '11.15.0',
   };
   const json = JSON.stringify(data);
   const blob = new Blob([json], {type:'application/json'});
@@ -8821,7 +8863,7 @@ document.querySelector('.tab[data-view="laporan"]') &&
     setTimeout(renderLaporanAdvanced, 200);
   });
 
-console.log('✅ ServisTek v11.14.0 — Semua fitur baru berhasil dimuat.');
+console.log('✅ ServisTek v11.15.0 — Semua fitur baru berhasil dimuat.');
 
 // Footer backup info
 (function(){
@@ -8839,7 +8881,7 @@ console.log('✅ ServisTek v11.14.0 — Semua fitur baru berhasil dimuat.');
    PWA: Service Worker Registration + Auto-Update
    ================================================================ */
 (function initPWA(){
-  const VERSION = '11.14.0';
+  const VERSION = '11.15.0';
   let swRegistration = null;
   let newWorkerWaiting = false;
 
