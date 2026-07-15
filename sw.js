@@ -1,9 +1,9 @@
 /* ================================================================
    ServisTek PWA — Service Worker dengan Auto-Update
-   Versi: 11.15.0
+   Versi: 11.16.0
    ================================================================ */
 
-const APP_VERSION = '11.15.0';
+const APP_VERSION = '11.16.0';
 const CACHE_NAME = `servistek-v${APP_VERSION}`;
 const OFFLINE_URL = './index.html';
 
