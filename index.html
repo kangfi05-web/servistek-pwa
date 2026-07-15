@@ -14,7 +14,7 @@
 <link rel="apple-touch-icon" href="icons/icon-192x192.png">
 <link rel="apple-touch-icon" sizes="152x152" href="icons/icon-152x152.png">
 <link rel="apple-touch-icon" sizes="144x144" href="icons/icon-144x144.png">
-<title>ServisTek v11.15 — Alat Bantu Servis HP</title>
+<title>ServisTek v11.16 — Alat Bantu Servis HP</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" defer></script>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1262,7 +1262,7 @@
       <div class="brand-text">
         <h1>ServisTek</h1>
         <p>Alat Bantu Servis HP</p>
-        <p style="font-family:var(--mono);font-size:10px;color:var(--ember-2);letter-spacing:0.5px;margin-top:1px;">v11.15.0</p>
+        <p style="font-family:var(--mono);font-size:10px;color:var(--ember-2);letter-spacing:0.5px;margin-top:1px;">v11.16.0</p>
       </div>
     </div>
     <div style="display:flex;align-items:center;gap:10px;">
@@ -1271,7 +1271,7 @@
       <button id="pwa-install-btn" onclick="pwaTriggerInstall()" title="Install ServisTek">📲 Install App</button>
   <div class="status-strip">
         <span><span class="status-dot"></span>AKTIF</span>
-        <span style="font-family:var(--mono);font-size:10px;color:var(--ember-2);background:var(--ember-dim);border:1px solid rgba(255,138,61,0.3);padding:2px 7px;border-radius:4px;">v11.15.0</span>
+        <span style="font-family:var(--mono);font-size:10px;color:var(--ember-2);background:var(--ember-dim);border:1px solid rgba(255,138,61,0.3);padding:2px 7px;border-radius:4px;">v11.16.0</span>
         <span id="clock">--:--:--</span>
       </div>
     </div>
@@ -3916,7 +3916,7 @@ document.getElementById("backupJsonBtn").addEventListener("click",()=>{
   const history = loadHistory();
   const payload = {
     app: "ServisTek",
-    version: "11.15.0",
+    version: "11.16.0",
     exportedAt: new Date().toISOString(),
     ticketCounter: +localStorage.getItem("servistek_ticket_counter") || 0,
     history,
@@ -6208,7 +6208,7 @@ document.getElementById("bulkDeleteOldBtn").addEventListener("click",()=>{
     `Storage sekarang: ${Math.round(newBytes/1024)} KB.`);
 });
 
-/* =================== FITUR 9: BACKUP REMINDER (gabungan, v11.15) =================== */
+/* =================== FITUR 9: BACKUP REMINDER (gabungan, v11.16) =================== */
 (function checkBackupReminder(){
   const lastBackup = +localStorage.getItem("servistek_last_backup") || 0;
   const daysSince = lastBackup ? Math.floor((Date.now()-lastBackup)/86400000) : 999;
@@ -6808,12 +6808,35 @@ function renderAntrian(){
   const sortBy = (document.getElementById("antrianSortBy")||{value:"eta"}).value;
   const today = new Date(); today.setHours(0,0,0,0);
 
-  // Only show active (not hutang/selesai-already-picked)
-  const active = history.filter(h=> h.status==="masuk"||h.status==="proses"||(h.status==="selesai"||h.status==="belum-lunas"));
+  // Filter aktif:
+  // - masuk / proses → selalu tampil
+  // - selesai / belum-lunas → tampil HANYA jika belum diambil (takenAt kosong)
+  // - hutang → tampil (masih perlu perhatian)
+  // - arsip, dan selesai yang sudah takenAt → EXCLUDE
+  const active = history.filter(h=>{
+    if(h.status==="arsip") return false;
+    if(h.status==="masuk" || h.status==="proses" || h.status==="hutang") return true;
+    if(h.status==="selesai" || h.status==="belum-lunas"){
+      return !h.takenAt; // hanya tampil jika BELUM diambil
+    }
+    return false;
+  });
   const filtered = teknisiFilter ? active.filter(h=>(h.teknisi||"")=== teknisiFilter) : active;
 
-  // Compute urgency
+  // Urgency:
+  // - Untuk status masuk/proses: berdasarkan ETA pengerjaan
+  // - Untuk status selesai/belum-lunas: berdasarkan berapa hari menunggu diambil
   function urgency(h){
+    if(h.status==="selesai" || h.status==="belum-lunas"){
+      // Hitung hari sejak selesai/dibayar
+      const selesaiTime = h.paidDate ? new Date(h.paidDate) : new Date(h.date);
+      selesaiTime.setHours(0,0,0,0);
+      const dayWaiting = Math.round((today - selesaiTime)/86400000);
+      if(dayWaiting >= 7) return "terlambat";  // >7 hari belum diambil = terlambat
+      if(dayWaiting >= 3) return "hari-ini";   // 3-6 hari = perlu perhatian
+      return "aman";
+    }
+    // Status masuk/proses/hutang: berdasarkan ETA pengerjaan
     if(!h.eta) return "aman";
     const eta = new Date(h.eta); eta.setHours(0,0,0,0);
     const diff = Math.round((eta-today)/86400000);
@@ -6838,42 +6861,64 @@ function renderAntrian(){
     });
   }
 
-  const masuk = sortEntries(filtered.filter(h=>h.status==="masuk"));
-  const proses = sortEntries(filtered.filter(h=>h.status==="proses"));
+  const masuk   = sortEntries(filtered.filter(h=>h.status==="masuk"));
+  const proses  = sortEntries(filtered.filter(h=>h.status==="proses"));
+  // Kolom selesai: tampilkan selesai + belum-lunas yang belum diambil, maks 15
   const selesai = sortEntries(filtered.filter(h=>h.status==="selesai"||h.status==="belum-lunas")).slice(0,15);
 
-  // Stats
-  document.getElementById("antrianTerlambat").textContent = filtered.filter(h=>urgency(h)==="terlambat"&&h.status!=="selesai").length;
-  document.getElementById("antrianHariIni").textContent = filtered.filter(h=>urgency(h)==="hari-ini"&&h.status!=="selesai").length;
-  document.getElementById("antrianProses").textContent = proses.length;
-  document.getElementById("antrianMasuk").textContent = masuk.length;
-  document.getElementById("countMasuk").textContent = masuk.length;
-  document.getElementById("countProses").textContent = proses.length;
+  // Stats — hanya dari masuk/proses (bukan selesai)
+  document.getElementById("antrianTerlambat").textContent = filtered.filter(h=>urgency(h)==="terlambat"&&(h.status==="masuk"||h.status==="proses")).length;
+  document.getElementById("antrianHariIni").textContent   = filtered.filter(h=>urgency(h)==="hari-ini"&&(h.status==="masuk"||h.status==="proses")).length;
+  document.getElementById("antrianProses").textContent    = proses.length;
+  document.getElementById("antrianMasuk").textContent     = masuk.length;
+  document.getElementById("countMasuk").textContent       = masuk.length;
+  document.getElementById("countProses").textContent      = proses.length;
   document.getElementById("countSelesaiAntrian").textContent = selesai.length;
 
-  // Blast subtext
+  // Blast subtext — hanya HP yang benar-benar belum diambil (takenAt kosong)
   const tungguAmbil = history.filter(h=>{
     if(h.status!=="selesai") return false;
-    const daysSince = Math.floor((Date.now()-new Date(h.date))/86400000);
+    if(h.takenAt) return false; // sudah diambil, tidak perlu blast
+    const daysSince = Math.floor((Date.now()-new Date(h.paidDate||h.date))/86400000);
     return daysSince >= 3;
   });
-  document.getElementById("blastSubtext").textContent = tungguAmbil.length
-    ? `Ada ${tungguAmbil.length} pelanggan yang HP-nya sudah selesai >3 hari belum diambil. Kirim pengingat sekarang!`
-    : "Belum ada HP yang sudah selesai >3 hari. Semua beres! 🎉";
+  const blastSubEl = document.getElementById("blastSubtext");
+  if(blastSubEl){
+    blastSubEl.textContent = tungguAmbil.length
+      ? `Ada ${tungguAmbil.length} HP selesai >3 hari belum diambil. Kirim pengingat!`
+      : "Semua HP sudah diambil atau belum ada yang menunggu >3 hari. 🎉";
+  }
 
   function buildCard(h){
     const urg = urgency(h);
-    const etaStr = h.eta ? new Date(h.eta).toLocaleDateString("id-ID",{day:"numeric",month:"short"}) : "-";
-    const urgClass = urg==="terlambat"?"terlambat":urg==="hari-ini"?"hampir-eta":"aman";
-    const urgBadgeClass = urg==="terlambat"?"urgency-terlambat":urg==="hari-ini"?"urgency-hari-ini":urg==="besok"?"urgency-besok":"urgency-aman";
-    const urgText = urg==="terlambat"?"⚠ Terlambat":urg==="hari-ini"?"🔥 Hari ini":urg==="besok"?"⏰ Besok":"✅ Aman";
+    const urgClass       = urg==="terlambat"?"terlambat":urg==="hari-ini"?"hampir-eta":"aman";
+    const urgBadgeClass  = urg==="terlambat"?"urgency-terlambat":urg==="hari-ini"?"urgency-hari-ini":urg==="besok"?"urgency-besok":"urgency-aman";
     const daysIn = Math.floor((Date.now()-new Date(h.date))/86400000);
+
+    // Label urgency berbeda untuk kolom selesai vs masuk/proses
+    let urgText, etaLabel;
+    if(h.status==="selesai" || h.status==="belum-lunas"){
+      const selesaiTime = h.paidDate ? new Date(h.paidDate) : new Date(h.date);
+      selesaiTime.setHours(0,0,0,0);
+      const dayWaiting = Math.round((today - selesaiTime)/86400000);
+      urgText  = urg==="terlambat"
+        ? `⚠ Menunggu ${dayWaiting} hari`
+        : urg==="hari-ini"
+          ? `⏳ Menunggu ${dayWaiting} hari`
+          : `✅ Baru selesai`;
+      etaLabel = `📦 Menunggu ${dayWaiting} hari`;
+    } else {
+      const etaStr = h.eta ? new Date(h.eta).toLocaleDateString("id-ID",{day:"numeric",month:"short"}) : "-";
+      urgText  = urg==="terlambat"?"⚠ Terlambat":urg==="hari-ini"?"🔥 Hari ini":urg==="besok"?"⏰ Besok":"✅ Aman";
+      etaLabel = `📅 ${etaStr}`;
+    }
+
     return `<div class="antrian-card ${urgClass}" data-id="${h.id}">
       <div class="antrian-ticket">${escapeHtml(h.ticket)}</div>
       <div class="antrian-name">${escapeHtml(h.name)}</div>
       <div class="antrian-device">${escapeHtml(h.device||"—")}</div>
       <div class="antrian-meta">
-        <span class="antrian-eta ${urg==="terlambat"?"" : ""}">📅 ${etaStr}</span>
+        <span class="antrian-eta">${etaLabel}</span>
         ${h.teknisi?`<span class="antrian-teknisi">👨‍🔧 ${escapeHtml(h.teknisi)}</span>`:""}
       </div>
       <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;">
@@ -6883,9 +6928,9 @@ function renderAntrian(){
     </div>`;
   }
 
-  document.getElementById("colMasuk").innerHTML = masuk.length ? masuk.map(buildCard).join("") : '<p style="color:var(--text-faint);font-size:12px;text-align:center;padding:20px 0;">Tidak ada servis baru masuk.</p>';
-  document.getElementById("colProses").innerHTML = proses.length ? proses.map(buildCard).join("") : '<p style="color:var(--text-faint);font-size:12px;text-align:center;padding:20px 0;">Tidak ada yang sedang dikerjakan.</p>';
-  document.getElementById("colSelesai").innerHTML = selesai.length ? selesai.map(buildCard).join("") : '<p style="color:var(--text-faint);font-size:12px;text-align:center;padding:20px 0;">Tidak ada servis selesai.</p>';
+  document.getElementById("colMasuk").innerHTML   = masuk.length   ? masuk.map(buildCard).join("")   : '<p style="color:var(--text-faint);font-size:12px;text-align:center;padding:20px 0;">Tidak ada servis baru masuk.</p>';
+  document.getElementById("colProses").innerHTML  = proses.length  ? proses.map(buildCard).join("")  : '<p style="color:var(--text-faint);font-size:12px;text-align:center;padding:20px 0;">Tidak ada yang sedang dikerjakan.</p>';
+  document.getElementById("colSelesai").innerHTML = selesai.length ? selesai.map(buildCard).join("") : '<p style="color:var(--text-faint);font-size:12px;text-align:center;padding:20px 0;">Tidak ada HP menunggu diambil.</p>';
 
   // Click card → edit
   document.querySelectorAll(".antrian-card").forEach(card=>{
@@ -7874,7 +7919,7 @@ setInterval(checkETANotifikasi, 3600000);
 
 <!-- Footer versi -->
 <div class="no-print" style="text-align:center;padding:20px 0 8px;font-family:var(--mono);font-size:10.5px;color:var(--text-faint);letter-spacing:0.5px;">
-  ServisTek <span style="color:var(--ember-2);font-weight:700;">v11.15.0</span> · PWA · Data tersimpan lokal di browser ini
+  ServisTek <span style="color:var(--ember-2);font-weight:700;">v11.16.0</span> · PWA · Data tersimpan lokal di browser ini
   <span id="footerLastBackup" style="display:block;margin-top:3px;"></span>
 </div>
 
@@ -7914,7 +7959,7 @@ window.addEventListener('offline', checkOnline);
 // Delay agar SW sempat load, tidak false-positive
 setTimeout(checkOnline, 1500);
 
-/* CATATAN v11.15: reminder backup sudah digabung menjadi satu sistem
+/* CATATAN v11.16: reminder backup sudah digabung menjadi satu sistem
    (lihat FITUR 9: BACKUP REMINDER di atas, fungsi checkBackupReminder)
    agar tidak muncul dua banner backup sekaligus. */
 
@@ -8594,7 +8639,7 @@ document.getElementById('tvCloseBtn') && document.getElementById('tvCloseBtn').a
 });
 
 /* ================================================================
-   FITUR 10: QR EXPORT / SYNC — v11.15 (QR sungguhan via qrcode.js)
+   FITUR 10: QR EXPORT / SYNC — v11.16 (QR sungguhan via qrcode.js)
    ================================================================ */
 function generateQRSync(){
   const data = {
@@ -8608,7 +8653,7 @@ function generateQRSync(){
     custom_db: loadCustomDB(),
     exported: new Date().toISOString(),
     source: 'ServisTek',
-    version: '11.15.0',
+    version: '11.16.0',
   };
   const json = JSON.stringify(data);
   const blob = new Blob([json], {type:'application/json'});
@@ -8863,7 +8908,7 @@ document.querySelector('.tab[data-view="laporan"]') &&
     setTimeout(renderLaporanAdvanced, 200);
   });
 
-console.log('✅ ServisTek v11.15.0 — Semua fitur baru berhasil dimuat.');
+console.log('✅ ServisTek v11.16.0 — Semua fitur baru berhasil dimuat.');
 
 // Footer backup info
 (function(){
@@ -8881,7 +8926,7 @@ console.log('✅ ServisTek v11.15.0 — Semua fitur baru berhasil dimuat.');
    PWA: Service Worker Registration + Auto-Update
    ================================================================ */
 (function initPWA(){
-  const VERSION = '11.15.0';
+  const VERSION = '11.16.0';
   let swRegistration = null;
   let newWorkerWaiting = false;
 
